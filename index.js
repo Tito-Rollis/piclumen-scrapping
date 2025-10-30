@@ -46,12 +46,24 @@ await page.type(prompt_input_selector, 'animal', { delay: 1000 });
 // button
 const generate_btn_selector = '.n-button:last-child';
 await page.waitForSelector(generate_btn_selector);
-await page.click(generate_btn_selector, { delay: 2000 });
+// await page.click(generate_btn_selector, { delay: 2000 });
 
 // images
-const img = await page.waitForSelector('.task-item', { timeout: 0 });
+const img_selector =
+    '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child';
+await page.hover(img_selector);
+
+// Download button
+const download_btn_selector =
+    '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child div.action-bar.bottom-mask .action-item:nth-child(2)';
+await page.waitForSelector(download_btn_selector);
+await page.click(download_btn_selector, { delay: 3000 });
+
+console.log('✅ Download sukses!!!');
+// const buttons = await page.waitForSelector(bottom_btns_selector, { timeout: 0 });
+const img = await page.waitForSelector(img_selector, { timeout: 0 });
 // Screenshot hasil login
-await img.screenshot({ path: 'login-success.png' });
+// await tes.screenshot({ path: 'login-success.png' });
 // console.log(btn);
 
 console.log('✅ Login sukses! Screenshot disimpan di login-success.png');
