@@ -28,11 +28,30 @@ await page.locator('a[href="/app/create"]').click();
 
 await page.waitForNavigation({ timeout: 0 });
 
-await page.locator('.resolution-item:last-child').click();
+// Button Resolusi
+const res_selector = '.resolution-item:last-child';
+await page.waitForSelector(res_selector);
+await page.click(res_selector, { delay: 3000 });
 
-await page.locator('.batch-item:nth-child(2)').click();
+// Button Batch
+const batch_selector = '.batch-item:nth-child(2)';
+await page.waitForSelector(batch_selector);
+await page.click(batch_selector, { delay: 3000 });
 
+// textarea
+const prompt_input_selector = 'textarea[placeholder="Describe the piece you want to create..."]';
+await page.waitForSelector(prompt_input_selector);
+await page.type(prompt_input_selector, 'animal', { delay: 1000 });
+
+// button
+const generate_btn_selector = '.n-button:last-child';
+await page.waitForSelector(generate_btn_selector);
+await page.click(generate_btn_selector, { delay: 2000 });
+
+// images
+const img = await page.waitForSelector('.task-item', { timeout: 0 });
 // Screenshot hasil login
-await text.screenshot({ path: 'login-success.png' });
+await img.screenshot({ path: 'login-success.png' });
+// console.log(btn);
 
 console.log('✅ Login sukses! Screenshot disimpan di login-success.png');
