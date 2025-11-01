@@ -2,6 +2,8 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import dotenv from 'dotenv';
 dotenv.config();
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // Or import puppeteer from 'puppeteer-core';
 const url = 'https://www.piclumen.com/app/account/login';
 puppeteer.use(StealthPlugin());
@@ -49,21 +51,43 @@ await page.waitForSelector(generate_btn_selector);
 // await page.click(generate_btn_selector, { delay: 2000 });
 
 // images
-const img_selector =
+
+// 1st Image
+const first_img_selector =
     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child';
-await page.hover(img_selector);
+await page.hover(first_img_selector);
 
 // Download button
-const download_btn_selector =
+const download_first_img_btn_selector =
     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child div.action-bar.bottom-mask .action-item:nth-child(2)';
-await page.waitForSelector(download_btn_selector);
-await page.click(download_btn_selector, { delay: 3000 });
+await page.waitForSelector(download_first_img_btn_selector);
+// await page.click(download_first_img_btn_selector);
+
+await delay(3000);
+
+// 2nd Image
+const second_img_selector =
+    '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:nth-child(2)';
+await page.hover(second_img_selector);
+
+// Download button
+const download_second_img_btn_selector =
+    '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:nth-child(2) div.action-bar.bottom-mask .action-item:nth-child(2)';
+await page.waitForSelector(download_second_img_btn_selector);
+// await page.click(download_second_img_btn_selector);
 
 console.log('✅ Download sukses!!!');
 // const buttons = await page.waitForSelector(bottom_btns_selector, { timeout: 0 });
-const img = await page.waitForSelector(img_selector, { timeout: 0 });
+
+const tes = await page.$$eval(
+    '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view .prompt',
+    (divs) => divs.map((div) => div.textContent)
+);
+// const tes = await page.waitForSelector(
+//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .prompt'
+// );
 // Screenshot hasil login
 // await tes.screenshot({ path: 'login-success.png' });
-// console.log(btn);
+console.log(tes);
 
 console.log('✅ Login sukses! Screenshot disimpan di login-success.png');
