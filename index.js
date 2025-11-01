@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const PROMPTS = ['animal', 'robot', 'plant', 'number'];
 // Or import puppeteer from 'puppeteer-core';
 const url = 'https://www.piclumen.com/app/account/login';
 puppeteer.use(StealthPlugin());
@@ -79,15 +80,40 @@ await page.waitForSelector(download_second_img_btn_selector);
 console.log('✅ Download sukses!!!');
 // const buttons = await page.waitForSelector(bottom_btns_selector, { timeout: 0 });
 
-const tes = await page.$$eval(
-    '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view .prompt',
-    (divs) => divs.map((div) => div.textContent)
-);
+const matchingImageHandles = [];
+const imagesContainer = await page.$$('.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view');
+
+// Logic for mapping images to matchingImageHandles
+for (const [index, container] of imagesContainer.entries()) {
+    const promptEl = await container.$('.prompt');
+    const promptText = await promptEl.evaluate((el) => el.textContent);
+
+    const isMatching = PROMPTS.includes(promptText);
+
+    if (isMatching) {
+        const imageElement = await container.$$('.virtual-item-img');
+        for (const [idx, img] of imageElement.entries()) {
+            matchingImageHandles.push(img);
+
+            await img.screenshot({ path: `img-${index}-${idx}.png` });
+        }
+    }
+}
+
+console.log(matchingImageHandles);
+
+// const tes = await page.$$eval(
+//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view .prompt',
+//     (divs) =>
+//         divs.map(async (div) => {
+//             const getImage = await page.waitForSelector(`${div.className} `);
+//         })
+// );
 // const tes = await page.waitForSelector(
 //     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .prompt'
 // );
 // Screenshot hasil login
 // await tes.screenshot({ path: 'login-success.png' });
-console.log(tes);
+// console.log(tes);
 
 console.log('✅ Login sukses! Screenshot disimpan di login-success.png');
