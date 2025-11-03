@@ -85,22 +85,25 @@ const imagesContainer = await page.$$('.vue-recycle-scroller__item-wrapper > .vu
 
 // Logic for mapping images to matchingImageHandles
 for (const [index, container] of imagesContainer.entries()) {
-    const promptEl = await container.$('.prompt');
-    const promptText = await promptEl.evaluate((el) => el.textContent);
+    const promptEl = await container.$('.prompt'); // get prompt label element
+    const promptText = await promptEl.evaluate((el) => el.textContent); // get the string of text
 
-    const isMatching = PROMPTS.includes(promptText);
+    const isMatching = PROMPTS.includes(promptText); // filtering the prompts
 
     if (isMatching) {
-        const imageElement = await container.$$('.virtual-item-img');
-        for (const [idx, img] of imageElement.entries()) {
-            matchingImageHandles.push(img);
+        const imageElement = await container.$('.virtual-item-img:first-child'); // get the first image of each prompts
+        const imageLink = await imageElement.evaluate((el) => el.getAttribute('src'));
+        await imageElement.hover();
+        await delay(3000);
+        // Download button
+        const download_first_img_btn_selector = 'div.action-bar.bottom-mask .action-item:nth-child(2)';
+        const download_btn_el = await container.$(download_first_img_btn_selector);
+        await download_btn_el.click();
+        await delay(3000);
 
-            await img.screenshot({ path: `img-${index}-${idx}.png` });
-        }
+        console.log(`Image ${imageLink} is successfully donwloaded`);
     }
 }
-
-console.log(matchingImageHandles);
 
 // const tes = await page.$$eval(
 //     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view .prompt',
