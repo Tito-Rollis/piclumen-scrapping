@@ -4,12 +4,23 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 import dotenv from 'dotenv';
 
+import path from 'path';
+
+import fs from 'node:fs';
+import { cwd } from 'node:process';
+
 dotenv.config();
 
+const promptFilePath = path.join(cwd(), 'prompts.txt');
+
+const PROMPTS = fs
+    .readFileSync(promptFilePath, { encoding: 'utf8' })
+    .trim()
+    .split('\n')
+    .map((prompt) => prompt.trim())
+    .filter(Boolean);
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const PROMPTS = ['flower', 'plants', 'trees'];
-
 // Or import puppeteer from 'puppeteer-core';
 
 const url = 'https://www.piclumen.com/app/account/login';
@@ -21,8 +32,6 @@ puppeteer.use(StealthPlugin());
 const browser = await puppeteer.launch({ headless: false });
 
 const page = await browser.newPage();
-
-// await page.goto('https://affiliate.shopee.co.id/dashboard', { waitUntil: 'networkidle2' });
 
 await page.goto(url, { waitUntil: 'networkidle2', timeout: 0 });
 
@@ -42,7 +51,7 @@ await page.waitForNavigation({ timeout: 0 });
 
 // Button Resolusi
 
-const res_selector = '.resolution-item:last-child';
+const res_selector = '.resolution-item:first-child';
 
 await page.waitForSelector(res_selector);
 
@@ -79,8 +88,7 @@ for (const prompt of PROMPTS) {
         await delay(3000);
 
         // Download section
-        const first_new_image_selector =
-            '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child';
+
         const first_new_image_container =
             '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child';
 
@@ -111,106 +119,3 @@ for (const prompt of PROMPTS) {
         break;
     }
 }
-
-// Logic for download images
-
-// for (const [index, container] of imagesContainer.entries()) {
-//     const promptEl = await container.$('.prompt'); // get prompt label element
-
-//     const promptText = await promptEl.evaluate((el) => el.textContent); // get the string of text
-
-//     const isMatching = PROMPTS.includes(promptText); // filtering the prompts
-
-//     if (isMatching) {
-//         const imageElement = await container.$('.virtual-item-img:first-child'); // get the first image of each prompts
-
-//         const imageLink = await imageElement.evaluate((el) => el.getAttribute('src'));
-
-//         await imageElement.hover();
-
-//         await delay(3000);
-
-//         // Download button
-
-//         const download_first_img_btn_selector = 'div.action-bar.bottom-mask .action-item:nth-child(2)';
-
-//         const download_btn_el = await container.$(download_first_img_btn_selector);
-
-//         await download_btn_el.click();
-
-//         await delay(3000);
-
-//         console.log(`Image ${imageLink} is successfully donwloaded`);
-//     }
-// }
-
-// textarea
-
-// button
-
-// images
-
-// 1st Image
-
-// const first_img_selector =
-
-//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child';
-
-// await page.hover(first_img_selector);
-
-// Download button
-
-// const download_first_img_btn_selector =
-
-//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:first-child div.action-bar.bottom-mask .action-item:nth-child(2)';
-
-// await page.waitForSelector(download_first_img_btn_selector);
-
-// await page.click(download_first_img_btn_selector);
-
-// 2nd Image
-
-// const second_img_selector =
-
-//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:nth-child(2)';
-
-// await page.hover(second_img_selector);
-
-// Download button
-
-// const download_second_img_btn_selector =
-
-//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .virtual-item-img:nth-child(2) div.action-bar.bottom-mask .action-item:nth-child(2)';
-
-// await page.waitForSelector(download_second_img_btn_selector);
-
-// await page.click(download_second_img_btn_selector);
-
-// const buttons = await page.waitForSelector(bottom_btns_selector, { timeout: 0 });
-
-// const tes = await page.$$eval(
-
-//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view .prompt',
-
-//     (divs) =>
-
-//         divs.map(async (div) => {
-
-//             const getImage = await page.waitForSelector(`${div.className} `);
-
-//         })
-
-// );
-
-// const tes = await page.waitForSelector(
-
-//     '.vue-recycle-scroller__item-wrapper > .vue-recycle-scroller__item-view:first-child .prompt'
-
-// );
-
-// Screenshot hasil login
-
-// await tes.screenshot({ path: 'login-success.png' });
-
-// console.log(tes);
-
