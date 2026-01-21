@@ -23,13 +23,16 @@ const PROMPTS = fs
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // Or import puppeteer from 'puppeteer-core';
 
-const url = 'https://www.piclumen.com/app/account/login';
+const url = 'https://www.piclumen.com/app/feed/creation';
 
 puppeteer.use(StealthPlugin());
 
 // Launch the browser and open a new blank page.
 
-const browser = await puppeteer.launch({ headless: false });
+const browser = await puppeteer.launch({
+    headless: false,
+    userDataDir: 'C:UsersouvalAppDataLocalGoogleChromeUser Data',
+});
 
 const page = await browser.newPage();
 
@@ -37,21 +40,21 @@ await page.goto(url, { waitUntil: 'networkidle2', timeout: 0 });
 
 // Tunggu halaman login selesai — misalnya redirect ke dashboard
 
-await page.locator('input[type="email"]').fill(process.env.EMAIL_INPUT);
+// await page.locator('input[type="email"]').fill(process.env.EMAIL_INPUT);
 
-await page.locator('input[type="password"]').fill(process.env.PASS_INPUT);
+// await page.locator('input[type="password"]').fill(process.env.PASS_INPUT);
 
-await page.locator('.n-button').click();
+// await page.locator('.n-button').click();
 
-await page.waitForNavigation({ timeout: 0 });
+// await page.waitForNavigation({ timeout: 0 });
 
-await page.locator('a[href="/app/create"]').click();
+await page.locator('a[href="/app/create/image"]').click();
 
 await page.waitForNavigation({ timeout: 0 });
 
 // Button Resolusi
 
-const res_selector = '.resolution-item:first-child';
+const res_selector = '.resolution-item:nth-child(3)';
 
 await page.waitForSelector(res_selector);
 
@@ -79,9 +82,22 @@ for (const prompt of PROMPTS) {
 
         await page.waitForSelector(generate_btn_selector);
 
-        await page.click(generate_btn_selector);
+        // Generate button
+        await page.click(generate_btn_selector).catch(() => {
+            console.log('current prompt: ', prompt);
+        });
 
-        await delay(9000);
+        const modal = await page.waitForSelector('.modal-content');
+        if (modal) {
+            const currentIdx = PROMPTS.findIndex((val) => val === prompt);
+            console.log('Limit of generating image is reached');
+            console.log('Current prompt is: ', prompt);
+            console.log(currentIdx);
+            browser.close();
+            break;
+        }
+
+        await delay(1000);
 
         await page.type(prompt_input_selector, '');
 
@@ -116,6 +132,7 @@ for (const prompt of PROMPTS) {
         await delay(3000); // Jeda antar klik
     } catch (e) {
         console.error(`[CRITICAL ERROR] Gagal memproses prompt ${prompt}:`, e.message);
+        browser.close();
         break;
     }
 }
