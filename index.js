@@ -87,12 +87,13 @@ for (const prompt of PROMPTS) {
             console.log('current prompt: ', prompt);
         });
 
-        const modal = await page.waitForSelector('.modal-content');
+        const modal = await page.waitForSelector('.modal-content', { visible: true, timeout: 3000 }).catch(() => null);
         if (modal) {
             const currentIdx = PROMPTS.findIndex((val) => val === prompt);
             console.log('Limit of generating image is reached');
             console.log('Current prompt is: ', prompt);
             console.log(currentIdx);
+            console.log(PROMPTS.slice(currentIdx, PROMPTS.length - 1));
             browser.close();
             break;
         }
