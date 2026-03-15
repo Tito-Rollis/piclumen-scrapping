@@ -1,3 +1,6 @@
+// use & "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\chrome-debug" on cli
+// then get ws url from http://localhost:9222/json/version
+
 import puppeteer from 'puppeteer-extra';
 
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -32,7 +35,7 @@ puppeteer.use(StealthPlugin());
 // Launch the browser and open a new blank page.
 
 const browser = await puppeteer.connect({
-    browserWSEndpoint: 'ws://localhost:9222/devtools/browser/c226d026-12cd-4547-88b3-047d158d5069',
+    browserWSEndpoint: 'ws://localhost:9222/devtools/browser/53376e02-60a7-494f-8dcf-5f3044a51e99',
 });
 
 const page = await browser.newPage();
@@ -45,25 +48,38 @@ const square_dimension = await page.waitForSelector('button[value="1:1"]');
 const landscape_dimension = await page.waitForSelector('button[value="16:9"]');
 
 const textarea_input = await page.waitForSelector('textarea#prompt-textarea');
-
-const generate_button = await page.waitForSelector('button[data-tour-id="generate-button"]');
-
-const selected_image_container = await page.waitForSelector('div[data-index="2"] a');
-await selected_image_container.hover();
-
-const icons = await page.waitForSelector('button[aria-label="Download image"]', { timeout: 0 });
+await textarea_input.click({ clickCount: 3 });
+await page.keyboard.press('Backspace');
 
 // LOGIC FLOW
 await square_dimension.click();
+
 await delay(2000);
-await textarea_input.type('');
-await textarea_input.type(
-    'cute 3d baby sealion character, soft rounded shapes, glossy material, studio lighting, isolated white background, soft shadow, high detail',
-);
-await delay(2000);
-await generate_button.click();
-await delay(5000);
-await icons.click();
+
+for (const prompt of PROMPTS) {
+    try {
+        await textarea_input.type(prompt);
+        await delay(2000);
+        const generate_button = await page.waitForSelector('button[data-tour-id="generate-button"]');
+
+        // Click Generate
+        await generate_button.click().catch(() => console.log('current prompt: ', prompt));
+
+        await delay(9000);
+        const selected_image_container = await page.waitForSelector('div[data-index="1"] a');
+        await selected_image_container.hover();
+        const download_button = await page.waitForSelector('button[aria-label="Download image"]', { timeout: 0 });
+        await download_button
+            .click()
+            .catch(() => console.log(`   [SUCCESS] Gambar (${prompt}) berhasil di-klik. Mengunduh...`));
+    } catch (error) {
+        console.log(error);
+    } finally {
+        await textarea_input.click({ clickCount: 3 });
+        await page.keyboard.press('Backspace');
+    }
+}
+
 // Tunggu halaman login selesai — misalnya redirect ke dashboard
 
 // await page.locator('input[type="email"]').fill(process.env.EMAIL_INPUT);
