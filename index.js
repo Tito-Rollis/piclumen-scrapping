@@ -14,6 +14,8 @@ import { cwd } from 'node:process';
 
 dotenv.config();
 
+const ws = 'ws://localhost:9222/devtools/browser/c242d268-946a-4399-9b5a-58dcfe63ea3f';
+
 const promptFilePath = path.join(cwd(), 'prompts.txt');
 
 const PROMPTS = fs
@@ -35,7 +37,7 @@ puppeteer.use(StealthPlugin());
 // Launch the browser and open a new blank page.
 
 const browser = await puppeteer.connect({
-    browserWSEndpoint: 'ws://localhost:9222/devtools/browser/53376e02-60a7-494f-8dcf-5f3044a51e99',
+    browserWSEndpoint: ws,
 });
 
 const page = await browser.newPage();
@@ -65,9 +67,26 @@ for (const prompt of PROMPTS) {
         // Click Generate
         await generate_button.click().catch(() => console.log('current prompt: ', prompt));
 
+        const upgrade_button = await page
+            .waitForSelector('button[data-tracking-id="upgrade_modal_close_button"]', { visible: true, timeout: 3000 })
+            .catch(() => null);
+
+        if (upgrade_button) {
+            const currentIdx = PROMPTS.findIndex((val) => val === prompt);
+            console.log('Limit of generating image is reached');
+            console.log('Current prompt is: ', prompt);
+            console.log(currentIdx);
+            const slicedPrompts = PROMPTS.slice(currentIdx, PROMPTS.length - 1);
+            const convertedSlicedPrompts = slicedPrompts.join('\n');
+            fs.writeFileSync('prompts.txt', convertedSlicedPrompts, 'utf8');
+            browser.close();
+            break;
+        }
         await delay(9000);
         const selected_image_container = await page.waitForSelector('div[data-index="1"] a');
+        await selected_image_container.scrollIntoView();
         await selected_image_container.hover();
+        await delay(2000);
         const download_button = await page.waitForSelector('button[aria-label="Download image"]', { timeout: 0 });
         await download_button
             .click()
