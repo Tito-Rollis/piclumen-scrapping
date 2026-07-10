@@ -1,5 +1,5 @@
 // & "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\chrome-debug"
-// then get ws url from http://localhost:9222/json/version
+//  http://localhost:9222/json/version
 
 import puppeteer from 'puppeteer-extra';
 
@@ -14,7 +14,7 @@ import { cwd } from 'node:process';
 
 dotenv.config();
 
-const ws = 'ws://localhost:9222/devtools/browser/f1f81ebe-357d-46af-a591-99ae1ba2725c';
+const ws = 'ws://localhost:9222/devtools/browser/2abe20fb-f6a1-46cf-8e82-a1d2f640867f';
 
 const promptFilePath = path.join(cwd(), 'prompts.txt');
 
@@ -27,22 +27,25 @@ const PROMPTS = fs
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // Or import puppeteer from 'puppeteer-core';
-const piclumen_url = 'https://www.piclumen.com';
-const leonardi_url = 'https://app.leonardo.ai/image-generation';
+const piclumen_url = 'https://www.piclumen.com/ai-image/';
+const leonardi_url = 'https://app.leonardo.ai/generate';
 const gemini_url = 'https://gemini.google.com';
 
 puppeteer.use(StealthPlugin());
 
 // Launch the browser and open a new blank page.
 
+// --------- For Leonarno
 const browser = await puppeteer.connect({
     browserWSEndpoint: ws,
 });
 
+// --------- For Piclumen
 // const browser = await puppeteer.launch({
 //     headless: false,
 //     userDataDir: 'C:UsersouvalAppDataLocalGoogleChromeUser Data',
 // });
+
 const page = await browser.newPage();
 
 const dimensions = await page.evaluate(() => {
@@ -60,13 +63,13 @@ const leonardo_robot_fn = async () => {
     await page.goto(leonardi_url, { waitUntil: 'networkidle2', timeout: 0 });
     const square_dimension = await page.waitForSelector('button[value="1:1"]');
     const landscape_dimension = await page.waitForSelector('button[value="16:9"]');
+    const potrait_dimension = await page.waitForSelector('button[value="2:3"]');
+
+    await landscape_dimension.click();
 
     const textarea_input = await page.waitForSelector('textarea#prompt-textarea');
     await textarea_input.click({ clickCount: 3 });
-    await page.keyboard.press('Backspace');
-
-    // LOGIC FLOW
-    await square_dimension.click();
+    // await page.keyboard.press('Backspace');
 
     await delay(2000);
 
@@ -74,34 +77,48 @@ const leonardo_robot_fn = async () => {
         try {
             await textarea_input.type(prompt);
             await delay(2000);
-            const generate_button = await page.waitForSelector('button[data-tour-id="generate-button"]');
-
+            const generate_button = await page.waitForSelector('button[data-tour-id="gen-tour-generate-button"]');
             // Click Generate
             await generate_button.click().catch(() => console.log('current prompt: ', prompt));
 
-            const upgrade_button = await page
-                .waitForSelector('button[data-tracking-id="upgrade_modal_close_button"]', {
-                    visible: true,
-                    timeout: 3000,
-                })
-                .catch(() => null);
+            // const upgrade_button = await page
+            //     .waitForSelector('button[data-tracking-id="upgrade_modal_close_button"]', {
+            //         visible: true,
+            //         timeout: 3000,
+            //     })
+            //     .catch(() => null);
 
-            if (upgrade_button) {
-                const currentIdx = PROMPTS.findIndex((val) => val === prompt);
-                console.log('Limit of generating image is reached');
-                console.log('Current prompt is: ', prompt);
-                console.log(currentIdx);
-                const slicedPrompts = PROMPTS.slice(currentIdx, PROMPTS.length - 1);
-                const convertedSlicedPrompts = slicedPrompts.join('\n');
-                fs.writeFileSync('prompts.txt', convertedSlicedPrompts, 'utf8');
+            // if (upgrade_button) {
+            //     const currentIdx = PROMPTS.findIndex((val) => val === prompt);
+            //     console.log('Limit of generating image is reached');
+            //     console.log('Current prompt is: ', prompt);
+            //     console.log(currentIdx);
+            //     const slicedPrompts = PROMPTS.slice(currentIdx, PROMPTS.length - 1);
+            //     const convertedSlicedPrompts = slicedPrompts.join('\n');
+            //     fs.writeFileSync('prompts.txt', convertedSlicedPrompts, 'utf8');
 
-                break;
-            }
-            await delay(9000);
-            const selected_image_container = await page.waitForSelector('div[data-index="1"] a');
-            await selected_image_container.scrollIntoView();
+            //     break;
+            // }
+            await delay(3000);
+            // const selected_image_container = await page.waitForSelector('div[data-index="1"] a', { timeout: 0 });
+            // await selected_image_container.screenshot({ path: './container.png' });
+            // await selected_image_container.scrollIntoView();
+            // await selected_image_container.hover();
+            // await selected_image_container.screenshot({ path: './hovered.png' });
+
+            // const make_private_button = await page.waitForSelector('button[aria-label="Make Image Private"]', {
+            //     timeout: 0,
+            // });
+
+            // await make_private_button.click();
+
+            // await selected_image_container.hover();
+            const selected_image_container = await page.waitForSelector('div[data-index="1"] div.cursor-pointer', {
+                timeout: 0,
+            });
             await selected_image_container.hover();
             await delay(2000);
+
             const download_button = await page.waitForSelector('button[aria-label="Download image"]', { timeout: 0 });
             await download_button
                 .click()
@@ -109,6 +126,7 @@ const leonardo_robot_fn = async () => {
         } catch (error) {
             console.log(error);
         } finally {
+            await textarea_input.scrollIntoView();
             await textarea_input.click({ clickCount: 3 });
             await page.keyboard.press('Backspace');
         }
@@ -227,4 +245,4 @@ const piclumen_robot_fn = async () => {
     }
 };
 
-piclumen_robot_fn();
+leonardo_robot_fn();
