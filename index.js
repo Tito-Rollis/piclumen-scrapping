@@ -78,6 +78,7 @@ const leonardo_robot_fn = async () => {
     // Select select input
     await select_style_trigger.click();
     await delay(2000);
+
     await page.evaluate(
         (sel, val) => {
             const selectElement = document.querySelector(sel);
