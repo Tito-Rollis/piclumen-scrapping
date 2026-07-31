@@ -14,7 +14,7 @@ import { cwd } from 'node:process';
 
 dotenv.config();
 
-const ws = 'ws://localhost:9222/devtools/browser/46f1ed82-9e4e-401a-846b-a40c20c6508d';
+const ws = 'ws://localhost:9222/devtools/browser/fe055fcb-4eba-40d3-9717-2c2350b2ba3d';
 
 const promptFilePath = path.join(cwd(), 'prompts.txt');
 
@@ -66,15 +66,34 @@ const leonardo_robot_fn = async () => {
     const square_dimension = await page.waitForSelector('button[value="1:1"]');
     const landscape_dimension = await page.waitForSelector('button[value="16:9"]');
     const potrait_dimension = await page.waitForSelector('button[value="2:3"]');
-    const select_model_input = await page.waitForSelector('button[data-testid="model-selector-trigger"]');
-    const generate_number = await page.$$eval('button');
+    const select_model_trigger = await page.waitForSelector('button[data-testid="model-selector-trigger"]');
+    const generate_number = await page.locator('button').filter((btn) => btn.textContent === '1');
+    const select_style_trigger = await page.waitForSelector('button[role="combobox"]:nth-child(2)');
+    const select_style_input = await page.waitForSelector('div > select');
 
     // MODELS
     const seedDream_selector = 'button[data-testid="seedream-4.5"]';
     const chatgpt_2_selector = 'button[data-testid="gpt-image-2"]';
 
     // Select select input
-    await select_model_input.select('');
+    await select_style_trigger.click();
+    await delay(2000);
+    await page.evaluate(
+        (sel, val) => {
+            const selectElement = document.querySelector(sel);
+
+            if (selectElement) {
+                // 1. Change the actual value
+                selectElement.value = val;
+
+                // 2. Dispatch a 'change' event to trigger website listeners
+                const event = new Event('change', { bubbles: true });
+                selectElement.dispatchEvent(event);
+            }
+        },
+        'button[role="combobox"]:nth-child(2) + select',
+        '5bdc3f2a-1be6-4d1c-8e77-992a30824a2c',
+    );
 
     await delay(5000);
 
@@ -83,6 +102,8 @@ const leonardo_robot_fn = async () => {
     // await page.keyboard.press('Backspace');
 
     await delay(2000);
+
+    // await generate_number.screenshot({ path: 'number.png' });
 
     const loop_fn = async (prompts) => {
         for (const prompt of prompts) {
