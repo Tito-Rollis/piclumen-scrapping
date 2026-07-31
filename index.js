@@ -14,7 +14,7 @@ import { cwd } from 'node:process';
 
 dotenv.config();
 
-const ws = 'ws://localhost:9222/devtools/browser/2abe20fb-f6a1-46cf-8e82-a1d2f640867f';
+const ws = 'ws://localhost:9222/devtools/browser/46f1ed82-9e4e-401a-846b-a40c20c6508d';
 
 const promptFilePath = path.join(cwd(), 'prompts.txt');
 
@@ -61,76 +61,95 @@ await page.setViewport(dimensions);
 // dimensions
 const leonardo_robot_fn = async () => {
     await page.goto(leonardi_url, { waitUntil: 'networkidle2', timeout: 0 });
+
+    // SETTINGS SELECTOR
     const square_dimension = await page.waitForSelector('button[value="1:1"]');
     const landscape_dimension = await page.waitForSelector('button[value="16:9"]');
     const potrait_dimension = await page.waitForSelector('button[value="2:3"]');
+    const select_model_input = await page.waitForSelector('button[data-testid="model-selector-trigger"]');
+    const generate_number = await page.$$eval('button');
+
+    // MODELS
+    const seedDream_selector = 'button[data-testid="seedream-4.5"]';
+    const chatgpt_2_selector = 'button[data-testid="gpt-image-2"]';
+
+    // Select select input
+    await select_model_input.select('');
+
+    await delay(5000);
 
     await landscape_dimension.click();
 
-    const textarea_input = await page.waitForSelector('textarea#prompt-textarea');
-    await textarea_input.click({ clickCount: 3 });
     // await page.keyboard.press('Backspace');
 
     await delay(2000);
 
-    for (const prompt of PROMPTS) {
-        try {
-            await textarea_input.type(prompt);
-            await delay(2000);
-            const generate_button = await page.waitForSelector('button[data-tour-id="gen-tour-generate-button"]');
-            // Click Generate
-            await generate_button.click().catch(() => console.log('current prompt: ', prompt));
+    const loop_fn = async (prompts) => {
+        for (const prompt of prompts) {
+            try {
+                const textarea_input = await page.waitForSelector('textarea#prompt-textarea');
+                await textarea_input.click({ clickCount: 3 });
+                await textarea_input.type(prompt);
+                await delay(2000);
+                const generate_button = await page.waitForSelector('button[data-tour-id="gen-tour-generate-button"]');
+                // Click Generate
+                await generate_button.click().catch(() => console.log('current prompt: ', prompt));
 
-            // const upgrade_button = await page
-            //     .waitForSelector('button[data-tracking-id="upgrade_modal_close_button"]', {
-            //         visible: true,
-            //         timeout: 3000,
-            //     })
-            //     .catch(() => null);
+                // const upgrade_button = await page
+                //     .waitForSelector('button[data-tracking-id="upgrade_modal_close_button"]', {
+                //         visible: true,
+                //         timeout: 3000,
+                //     })
+                //     .catch(() => null);
 
-            // if (upgrade_button) {
-            //     const currentIdx = PROMPTS.findIndex((val) => val === prompt);
-            //     console.log('Limit of generating image is reached');
-            //     console.log('Current prompt is: ', prompt);
-            //     console.log(currentIdx);
-            //     const slicedPrompts = PROMPTS.slice(currentIdx, PROMPTS.length - 1);
-            //     const convertedSlicedPrompts = slicedPrompts.join('\n');
-            //     fs.writeFileSync('prompts.txt', convertedSlicedPrompts, 'utf8');
+                // if (upgrade_button) {
+                //     const currentIdx = PROMPTS.findIndex((val) => val === prompt);
+                //     console.log('Limit of generating image is reached');
+                //     console.log('Current prompt is: ', prompt);
+                //     console.log(currentIdx);
+                //     const slicedPrompts = PROMPTS.slice(currentIdx, PROMPTS.length - 1);
+                //     const convertedSlicedPrompts = slicedPrompts.join('\n');
+                //     fs.writeFileSync('prompts.txt', convertedSlicedPrompts, 'utf8');
 
-            //     break;
-            // }
-            await delay(3000);
-            // const selected_image_container = await page.waitForSelector('div[data-index="1"] a', { timeout: 0 });
-            // await selected_image_container.screenshot({ path: './container.png' });
-            // await selected_image_container.scrollIntoView();
-            // await selected_image_container.hover();
-            // await selected_image_container.screenshot({ path: './hovered.png' });
+                //     break;
+                // }
+                await delay(8000);
+                // const selected_image_container = await page.waitForSelector('div[data-index="1"] a', { timeout: 0 });
+                // await selected_image_container.screenshot({ path: './container.png' });
+                // await selected_image_container.scrollIntoView();
+                // await selected_image_container.hover();
+                // await selected_image_container.screenshot({ path: './hovered.png' });
 
-            // const make_private_button = await page.waitForSelector('button[aria-label="Make Image Private"]', {
-            //     timeout: 0,
-            // });
+                // const make_private_button = await page.waitForSelector('button[aria-label="Make Image Private"]', {
+                //     timeout: 0,
+                // });
 
-            // await make_private_button.click();
+                // await make_private_button.click();
 
-            // await selected_image_container.hover();
-            const selected_image_container = await page.waitForSelector('div[data-index="1"] div.cursor-pointer', {
-                timeout: 0,
-            });
-            await selected_image_container.hover();
-            await delay(2000);
+                // await selected_image_container.hover();
+                const selected_image_container = await page.waitForSelector('div[data-index="1"] div.cursor-pointer', {
+                    timeout: 0,
+                });
+                await selected_image_container.hover();
+                await delay(2000);
 
-            const download_button = await page.waitForSelector('button[aria-label="Download image"]', { timeout: 0 });
-            await download_button
-                .click()
-                .catch(() => console.log(`   [SUCCESS] Gambar (${prompt}) berhasil di-klik. Mengunduh...`));
-        } catch (error) {
-            console.log(error);
-        } finally {
-            await textarea_input.scrollIntoView();
-            await textarea_input.click({ clickCount: 3 });
-            await page.keyboard.press('Backspace');
+                const download_button = await page.waitForSelector('button[aria-label="Download image"]', {
+                    timeout: 0,
+                });
+                await download_button
+                    .click()
+                    .catch(() => console.log(`   [SUCCESS] Gambar (${prompt}) berhasil di-klik. Mengunduh...`));
+            } catch (error) {
+                console.log(error);
+            } finally {
+                await textarea_input.scrollIntoView();
+                await textarea_input.click({ clickCount: 3 });
+                await page.keyboard.press('Backspace');
+            }
         }
-    }
+    };
+
+    // loop_fn(PROMPTS);
 };
 
 const gemini_robot_fn = async () => {
